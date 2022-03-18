@@ -22,7 +22,6 @@ table_headers_string = table_headers_string.replace('\n', ' ')
 table_headers_string = ' '.join(table_headers_string.split())  # fixing multiple spaces to one space
 table_headers = table_headers_string.split()
 del table_headers[:2]  # Removing 'Def' and 'Size' from headers since first column is not needed
-# TODO: remove: table_headers[0:2] = [' '.join(table_headers[0:2])]  # fixing the 'Def' 'Size' to 'Def Size'
 
 # Remove table headers from list
 lines.pop(0)
@@ -43,5 +42,43 @@ table_data = [x.split() for x in cleaned_lines]
 for row in table_data:
     row.pop(0)
 
+# Find the minimum length of all rows and delete the last element of rows that exceed the minimum length. Just to get
+# rid of random numbers in the end of some rows
+minimum_row_length = min(map(len, table_data))
+for row in table_data:
+    if len(row) > minimum_row_length:
+        del row[-1]
 
-print(table_data)
+# Final calculations
+for i in range(0, len(table_headers)):
+    # Fetch all cells for every column and store them in list, excluding cells with dash symbol
+    column_values = []
+    for row in table_data:
+        if '-' not in row[i]:
+            column_values.append(row[i])
+    # Deserialize all stored values to integers
+    column_values_cleaned = []
+    for value in column_values:
+        cleaned_value = value.split('/')
+        cleaned_value = map(int, cleaned_value)
+        column_values_cleaned.extend(cleaned_value)
+
+    # Sort the values for each column with bubble sorting since using builtin functions is not allowed.
+    # Using column_values_cleaned.sort() would be preferred
+    for j in range(len(column_values_cleaned)):
+        for k in range(j + 1, len(column_values_cleaned)):
+            if column_values_cleaned[j] > column_values_cleaned[k]:
+                column_values_cleaned[j], column_values_cleaned[k] = column_values_cleaned[k], column_values_cleaned[j]
+
+    # Calculate the avg number
+    total = 0
+    number_of_values = 0  # Using len(column_values_cleaned) would be preferred
+    for value in column_values_cleaned:
+        total += value
+        number_of_values += 1
+    average_number = total / number_of_values
+    average_number = round(average_number, 2)
+
+    # Output the result
+    print(table_headers[i] + ' -> ' + str(column_values_cleaned[0]) + ' ' + str(column_values_cleaned[-1]) +
+          ' ' + str(average_number))
